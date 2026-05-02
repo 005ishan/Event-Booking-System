@@ -4,6 +4,7 @@ const Otp = require("../models/otp.model");
 const generateOtp = require("../utils/generateOtp");
 const generateToken = require("../utils/generateToken");
 const generateExpiry = require("../utils/generateExpiry");
+const { sendOtpEmail, sendWelcomeEmail } = require("../utils/sendEmail");
 
 // Register user
 exports.registerUser = async (req, res) => {
@@ -21,13 +22,12 @@ exports.registerUser = async (req, res) => {
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    // Use utils
+    // Generate OTP and send email
     const otp = generateOtp();
-    const otpExpiry = generateExpiry(10); // 10 minutes
+    const otpExpiry = generateExpiry(10);
 
     await Otp.create({ email, otp, otpExpiry });
-
-    console.log(`OTP for ${email}: ${otp}`);
+    await sendOtpEmail(email, otp); 
 
     res.status(201).json({ message: "User registered. Please verify OTP." });
   } catch (err) {
@@ -42,7 +42,9 @@ exports.verifyOtp = async (req, res) => {
 
     const otpRecord = await Otp.findOne({ email });
     if (!otpRecord) {
-      return res.status(404).json({ message: "OTP not found or already expired" });
+      return res
+        .status(404)
+        .json({ message: "OTP not found or already expired" });
     }
 
     if (otpRecord.otp !== otp) {
@@ -54,10 +56,19 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    await User.findOneAndUpdate({ email }, { isVerified: true });
+    // Mark user as verified and clean up OTP
+    const user = await User.findOneAndUpdate(
+      { email },
+      { isVerified: true },
+      { new: true }, // returns updated user so we can get name
+    );
     await Otp.deleteOne({ email });
 
-    res.status(200).json({ message: "Email verified successfully. You can now login." });
+    await sendWelcomeEmail(email, user.name); 
+
+    res
+      .status(200)
+      .json({ message: "Email verified successfully. You can now login." });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -74,7 +85,9 @@ exports.loginUser = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      return res.status(403).json({ message: "Please verify your email first" });
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -82,7 +95,6 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Use utils
     const token = generateToken(user._id);
 
     res.status(200).json({ message: "Login successful", token });
