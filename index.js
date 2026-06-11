@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { notFound, errorHandler } = require("./middleware/error.middleware");
+const { notFound, errorHandler } = require("./middlewares/error.middleware");
 
 dotenv.config();
 
@@ -13,9 +13,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/auth", require("./routes/auth.routes"));
-app.use("/api/bookings", require("./routes/booking.routes"));
-app.use("/api/events", require("./routes/event.routes"));
+app.use("/api/auth", require("./routes/auth.route"));
+app.use("/api/bookings", require("./routes/booking.route"));
+app.use("/api/events", require("./routes/event.route"));
 
 // Error Middleware (must be last)
 app.use(notFound);

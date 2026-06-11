@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { protect, adminOnly } = require("../middleware/auth.middleware");
-const { validateEvent } = require("../middleware/validate.middleware");
+const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const { validateEvent } = require("../middlewares/validate.middleware");
 const {
   createEvent,
   getAllEvents,

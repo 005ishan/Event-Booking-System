@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { protect, adminOnly } = require("../middleware/auth.middleware");
-const { validateBooking } = require("../middleware/validate.middleware");
+const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const { validateBooking } = require("../middlewares/validate.middleware");
 const {
   createBooking,
   cancelBooking,
