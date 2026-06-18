@@ -60,7 +60,7 @@ exports.verifyOtp = async (req, res) => {
     const user = await User.findOneAndUpdate(
       { email },
       { isVerified: true },
-      { new: true }, // returns updated user so we can get name
+      { returnDocument: "after" }, // returns updated user so we can get name
     );
     await Otp.deleteOne({ email });
 
@@ -97,7 +97,7 @@ exports.loginUser = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.status(200).json({ message: "Login successful", token, user: { name: user.name, email: user.email } });
+    res.status(200).json({ message: "Login successful", token, user: { name: user.name, email: user.email, profilePicture: user.profilePicture || "" } });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
