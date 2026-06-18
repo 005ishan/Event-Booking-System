@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 const dotenv = require("dotenv");
 const { notFound, errorHandler } = require("./middlewares/error.middleware");
 
@@ -16,6 +17,11 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/auth.route"));
 app.use("/api/bookings", require("./routes/booking.route"));
 app.use("/api/events", require("./routes/event.route"));
+app.use("/api/profile", require("./routes/profile.route"));
+app.use("/api/profile/picture", require("./routes/upload.route"));
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Error Middleware (must be last)
 app.use(notFound);
