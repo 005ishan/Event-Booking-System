@@ -157,7 +157,7 @@ exports.updateBookingStatus = async (req, res) => {
     const booking = await Booking.findByIdAndUpdate(
       req.params.bookingId,
       { status },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!booking) {
