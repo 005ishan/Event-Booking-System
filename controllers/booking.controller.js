@@ -3,7 +3,6 @@ const Event = require("../models/event.model");
 const User = require("../models/user.model");
 const { sendBookingConfirmationEmail } = require("../utils/sendEmail");
 
-// Create booking
 exports.createBooking = async (req, res) => {
   try {
     const { eventId, seats } = req.body;
@@ -24,7 +23,6 @@ exports.createBooking = async (req, res) => {
 
     const totalAmount = event.price * seats;
 
-    // Create booking
     const booking = await Booking.create({
       user: userId,
       event: eventId,
@@ -32,15 +30,12 @@ exports.createBooking = async (req, res) => {
       totalAmount,
     });
 
-    // Reduce available seats
     await Event.findByIdAndUpdate(eventId, {
       $inc: { availableSeats: -seats },
     });
 
-    // Get user for email
     const user = await User.findById(userId);
 
-    // Send confirmation email
     await sendBookingConfirmationEmail(user.email, user.name, {
       bookingId: booking._id,
       eventName: event.title,
@@ -57,7 +52,6 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-// Cancel booking
 exports.cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -79,7 +73,6 @@ exports.cancelBooking = async (req, res) => {
     booking.status = "cancelled";
     await booking.save();
 
-    // Restore available seats
     await Event.findByIdAndUpdate(booking.event, {
       $inc: { availableSeats: booking.seats },
     });
@@ -92,7 +85,6 @@ exports.cancelBooking = async (req, res) => {
   }
 };
 
-// Get my bookings
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user.id })
@@ -105,7 +97,6 @@ exports.getMyBookings = async (req, res) => {
   }
 };
 
-// Get single booking
 exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.bookingId)
@@ -129,9 +120,6 @@ exports.getBookingById = async (req, res) => {
   }
 };
 
-// ---- ADMIN ----
-
-// Get all bookings
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
@@ -145,7 +133,6 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-// Update booking status
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;

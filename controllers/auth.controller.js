@@ -6,7 +6,6 @@ const generateToken = require("../utils/generateToken");
 const generateExpiry = require("../utils/generateExpiry");
 const { sendOtpEmail, sendWelcomeEmail } = require("../utils/sendEmail");
 
-// Register user
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -22,7 +21,6 @@ exports.registerUser = async (req, res) => {
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    // Generate OTP and send email
     const otp = generateOtp();
     const otpExpiry = generateExpiry(10);
 
@@ -35,7 +33,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Verify OTP
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -56,11 +53,10 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    // Mark user as verified and clean up OTP
     const user = await User.findOneAndUpdate(
       { email },
       { isVerified: true },
-      { returnDocument: "after" }, // returns updated user so we can get name
+      { returnDocument: "after" },
     );
     await Otp.deleteOne({ email });
 
@@ -74,7 +70,6 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
-// Login user
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;

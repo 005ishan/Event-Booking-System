@@ -2,14 +2,12 @@ const User = require("../models/user.model");
 const path = require("path");
 const fs = require("fs");
 
-// POST /api/profile/upload-picture — Upload profile picture
 exports.uploadProfilePicture = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Delete old profile picture if it exists
     const user = await User.findById(req.user._id);
     if (user.profilePicture) {
       const oldPath = path.join(__dirname, "..", user.profilePicture);
@@ -18,7 +16,6 @@ exports.uploadProfilePicture = async (req, res) => {
       }
     }
 
-    // Store relative path to the uploaded file
     const relativePath = `/uploads/${req.file.filename}`;
     user.profilePicture = relativePath;
     await user.save();
@@ -33,7 +30,6 @@ exports.uploadProfilePicture = async (req, res) => {
   }
 };
 
-// DELETE /api/profile/upload-picture — Remove profile picture
 exports.removeProfilePicture = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -47,6 +43,22 @@ exports.removeProfilePicture = async (req, res) => {
     await user.save();
     res.json({ message: "Profile picture removed" });
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.uploadEventImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    const relativePath = `/uploads/events/${req.file.filename}`;
+    res.json({
+      message: "Event image uploaded successfully",
+      image: relativePath,
+    });
+  } catch (err) {
+    console.error("Event image upload error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

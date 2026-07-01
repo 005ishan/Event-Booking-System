@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.model");
 
-// GET /api/profile — Get current user's profile
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -21,7 +20,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// PUT /api/profile — Update user's profile
 exports.updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, organizerName } = req.body;
@@ -31,7 +29,6 @@ exports.updateProfile = async (req, res) => {
     if (lastName !== undefined) updateData.lastName = lastName;
     if (organizerName !== undefined) updateData.organizerName = organizerName;
 
-    // Keep the full `name` field in sync
     const newFirstName = firstName !== undefined ? firstName : req.user.firstName || req.user.name.split(" ")[0];
     const newLastName = lastName !== undefined ? lastName : req.user.lastName || req.user.name.split(" ").slice(1).join(" ");
     updateData.name = `${newFirstName} ${newLastName}`.trim();
@@ -60,7 +57,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// PUT /api/profile/password — Change password
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;

@@ -1,6 +1,5 @@
 const Event = require("../models/event.model");
 
-// Create event (admin)
 exports.createEvent = async (req, res) => {
   try {
     const {
@@ -24,7 +23,7 @@ exports.createEvent = async (req, res) => {
       location,
       price,
       totalSeats,
-      availableSeats: totalSeats, // initially all seats available
+      availableSeats: totalSeats,
       image,
       createdBy: req.user.id,
     });
@@ -35,20 +34,24 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// Get all events (public)
 exports.getAllEvents = async (req, res) => {
   try {
-    const { category, date, search, page = 1, limit = 10 } = req.query;
+    const { category, date, endDate, search, page = 1, limit = 100 } = req.query;
 
     const filter = {};
 
     if (category) filter.category = category;
-    if (date) filter.date = { $gte: new Date(date) };
+    if (date || endDate) {
+      filter.date = {};
+      if (date) filter.date.$gte = new Date(date);
+      if (endDate) filter.date.$lte = new Date(endDate);
+    }
     if (search) filter.title = { $regex: search, $options: "i" };
 
     const skip = (page - 1) * limit;
 
     const events = await Event.find(filter)
+      .populate("createdBy", "name organizerName firstName lastName")
       .sort({ date: 1 })
       .skip(skip)
       .limit(Number(limit));
@@ -66,10 +69,9 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
-// Get single event (public)
 exports.getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.eventId);
+    const event = await Event.findById(req.params.eventId).populate("createdBy", "name organizerName firstName lastName");
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -80,7 +82,6 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-// Update event (admin)
 exports.updateEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.eventId);
@@ -100,7 +101,6 @@ exports.updateEvent = async (req, res) => {
       image,
     } = req.body;
 
-    // If totalSeats changed, adjust availableSeats accordingly
     if (totalSeats && totalSeats !== event.totalSeats) {
       const bookedSeats = event.totalSeats - event.availableSeats;
       const newAvailableSeats = totalSeats - bookedSeats;
@@ -132,7 +132,6 @@ exports.updateEvent = async (req, res) => {
   }
 };
 
-// Delete event (admin)
 exports.deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.eventId);
@@ -148,10 +147,10 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-// Get upcoming events (public)
 exports.getUpcomingEvents = async (req, res) => {
   try {
     const events = await Event.find({ date: { $gte: new Date() } })
+      .populate("createdBy", "name organizerName firstName lastName")
       .sort({ date: 1 })
       .limit(10);
 
@@ -161,13 +160,14 @@ exports.getUpcomingEvents = async (req, res) => {
   }
 };
 
-// Get events by category (public)
 exports.getEventsByCategory = async (req, res) => {
   try {
     const events = await Event.find({
       category: req.params.category,
       date: { $gte: new Date() },
-    }).sort({ date: 1 });
+    })
+      .populate("createdBy", "name organizerName firstName lastName")
+      .sort({ date: 1 });
 
     res.status(200).json({ events });
   } catch (err) {

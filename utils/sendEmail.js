@@ -8,7 +8,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// OTP Email
 const sendOtpEmail = async (email, otp) => {
   const mailOptions = {
     from: `"Event Booking System" <${process.env.EMAIL_USER}>`,
@@ -126,7 +125,6 @@ const sendWelcomeEmail = async (email, name) => {
   await transporter.sendMail(mailOptions);
 };
 
-// Booking Confirmation Email
 const sendBookingConfirmationEmail = async (email, name, bookingDetails) => {
   const mailOptions = {
     from: `"Event Booking System" <${process.env.EMAIL_USER}>`,
