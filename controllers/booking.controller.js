@@ -36,15 +36,19 @@ exports.createBooking = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    await sendBookingConfirmationEmail(user.email, user.name, {
-      bookingId: booking._id,
-      eventName: event.title,
-      date: new Date(event.date).toDateString(),
-      time: event.time,
-      location: event.location,
-      seats: booking.seats,
-      totalAmount: booking.totalAmount,
-    });
+    try {
+      await sendBookingConfirmationEmail(user.email, user.name, {
+        bookingId: booking._id,
+        eventName: event.title,
+        date: new Date(event.date).toDateString(),
+        time: event.time,
+        location: event.location,
+        seats: booking.seats,
+        totalAmount: booking.totalAmount,
+      });
+    } catch (emailErr) {
+      console.warn("Failed to send booking confirmation email:", emailErr.message);
+    }
 
     res.status(201).json({ message: "Booking confirmed!", booking });
   } catch (err) {

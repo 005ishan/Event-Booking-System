@@ -49,7 +49,7 @@ exports.validateBooking = (req, res, next) => {
 exports.validateEvent = (req, res, next) => {
   const { title, description, category, date, time, location, price, totalSeats } = req.body;
 
-  if (!title || !description || !category || !date || !time || !location || !price || !totalSeats) {
+  if (!title || !description || !category || !date || !time || !location || price === undefined || price === null || !totalSeats) {
     return res.status(400).json({ message: "All event fields are required" });
   }
 

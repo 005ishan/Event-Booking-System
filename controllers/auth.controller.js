@@ -21,11 +21,30 @@ exports.registerUser = async (req, res) => {
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
+    // In development mode, auto-verify user and return token immediately
+    if (process.env.NODE_ENV !== "production") {
+      user.isVerified = true;
+      await user.save();
+
+      const token = generateToken(user._id);
+
+      return res.status(201).json({
+        message: "User registered successfully",
+        token,
+        user: { name: user.name, email: user.email, profilePicture: user.profilePicture || "" },
+      });
+    }
+
     const otp = generateOtp();
     const otpExpiry = generateExpiry(10);
 
     await Otp.create({ email, otp, otpExpiry });
-    await sendOtpEmail(email, otp); 
+
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (emailErr) {
+      console.warn("Failed to send OTP email:", emailErr.message);
+    }
 
     res.status(201).json({ message: "User registered. Please verify OTP." });
   } catch (err) {
@@ -58,9 +77,11 @@ exports.verifyOtp = async (req, res) => {
       { isVerified: true },
       { returnDocument: "after" },
     );
-    await Otp.deleteOne({ email });
-
-    await sendWelcomeEmail(email, user.name); 
+    await Otp.deleteOne({ email });    try {
+      await sendWelcomeEmail(email, user.name);
+    } catch (emailErr) {
+      console.warn("Failed to send welcome email:", emailErr.message);
+    }
 
     res
       .status(200)
