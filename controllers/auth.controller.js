@@ -4,7 +4,7 @@ const Otp = require("../models/otp.model");
 const generateOtp = require("../utils/generateOtp");
 const generateToken = require("../utils/generateToken");
 const generateExpiry = require("../utils/generateExpiry");
-const { sendOtpEmail, sendWelcomeEmail } = require("../utils/sendEmail");
+const { sendOtpEmail, sendWelcomeEmail, sendResetPasswordEmail } = require("../utils/sendEmail");
 
 exports.registerUser = async (req, res) => {
   try {
@@ -114,6 +114,78 @@ exports.loginUser = async (req, res) => {
     const token = generateToken(user._id);
 
     res.status(200).json({ message: "Login successful", token, user: { name: user.name, email: user.email, profilePicture: user.profilePicture || "" } });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = generateOtp();
+    const otpExpiry = generateExpiry(10);
+
+    await Otp.findOneAndUpdate(
+      { email },
+      { otp, otpExpiry },
+      { upsert: true }
+    );
+
+    try {
+      await sendResetPasswordEmail(email, otp);
+    } catch (emailErr) {
+      console.warn("Failed to send reset password email:", emailErr.message);
+    }
+
+    res.status(200).json({ message: "Password reset OTP sent to your email" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "Email, OTP, and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord) {
+      return res.status(404).json({ message: "OTP not found or expired" });
+    }
+
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (otpRecord.otpExpiry < Date.now()) {
+      await Otp.deleteOne({ email });
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+    await Otp.deleteOne({ email });
+
+    res.status(200).json({ message: "Password reset successful. You can now login." });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

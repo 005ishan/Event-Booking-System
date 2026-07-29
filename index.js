@@ -19,6 +19,7 @@ app.use("/api/profile", require("./routes/profile.route"));
 app.use("/api/profile/picture", require("./routes/upload.route"));
 app.use("/api/events/upload", require("./routes/eventUpload.route"));
 app.use("/api/esewa", require("./routes/esewa.route"));
+app.use("/api/newsletter", require("./routes/newsletter.route"));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

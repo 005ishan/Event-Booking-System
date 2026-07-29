@@ -220,8 +220,55 @@ const sendBookingConfirmationEmail = async (email, name, bookingDetails) => {
   await transporter.sendMail(mailOptions);
 };
 
+const sendResetPasswordEmail = async (email, otp) => {
+  const mailOptions = {
+    from: `"Event Booking System" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Password Reset Request - Event Booking System",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
+
+        <div style="background: linear-gradient(135deg, #e65c00, #F9D423); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 26px;">Event Booking System</h1>
+          <p style="color: #e0e0e0; margin: 8px 0 0;">Password Reset</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 40px 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #333333; margin-top: 0;">Reset Your Password 🔑</h2>
+          <p style="color: #555555; font-size: 16px; line-height: 1.6;">
+            We received a request to reset your password for <b>Event Booking System</b>.
+            Use the OTP below to proceed.
+          </p>
+
+          <div style="background: linear-gradient(135deg, #e65c00, #F9D423); border-radius: 10px; padding: 25px; text-align: center; margin: 30px 0;">
+            <p style="color: #ffe0e0; margin: 0 0 10px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Your Reset OTP</p>
+            <h1 style="color: #ffffff; font-size: 48px; margin: 0; letter-spacing: 10px;">${otp}</h1>
+          </div>
+
+          <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 25px;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              ⏰ <b>This OTP will expire in 10 minutes.</b> If you didn't request this, please ignore this email.
+            </p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #eeeeee; margin: 25px 0;" />
+
+          <p style="color: #aaaaaa; font-size: 13px; text-align: center; margin: 0;">
+            © 2026 Event Booking System. All rights reserved.<br/>
+            This is an automated email, please do not reply.
+          </p>
+        </div>
+
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendOtpEmail,
   sendWelcomeEmail,
   sendBookingConfirmationEmail,
+  sendResetPasswordEmail,
 };
